@@ -1,0 +1,22 @@
+name: BlackTimber
+version: '${version}'
+main: tr.cebi.blacktimber.BlackTimber
+api-version: '26'
+folia-supported: true
+description: Smart tree felling that leaves player builds untouched.
+author: can61cebi
+website: https://github.com/can61cebi/blacktimber
+
+commands:
+  blacktimber:
+    description: BlackTimber controls.
+    aliases: [bt]
+    usage: /blacktimber <on|off|toggle|status|reload>
+
+permissions:
+  blacktimber.use:
+    description: Allows felling whole trees in one cut.
+    default: true
+  blacktimber.admin:
+    description: Allows reloading the BlackTimber configuration.
+    default: op

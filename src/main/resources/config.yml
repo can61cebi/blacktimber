@@ -1,0 +1,47 @@
+# BlackTimber configuration.
+# Reload after editing with: /blacktimber reload
+
+# Detection
+# Only fell trunks that still carry natural (non player placed) leaves.
+# Natural leaves have persistent=false, player placed leaves have persistent=true.
+# This single rule is what keeps houses and wooden builds from being toppled.
+require-natural-leaves: true
+# Minimum number of natural leaves that must be attached to count as a tree.
+min-natural-leaves: 1
+# Distance in blocks around a log to look for natural leaves.
+leaf-search-radius: 1
+# Connect logs diagonally during the search.
+# Required for acacia and cherry branches and for reliable 2x2 trunks.
+search-diagonal: true
+# Hard cap on logs removed in a single fell. Protects against grief and lag.
+max-logs: 150
+
+# Activation
+# Only trigger while the player holds an axe.
+require-axe: true
+# Sneak rule: ignore, required, or forbidden.
+sneak-requirement: ignore
+# Skip creative and spectator mode.
+survival-only: true
+# Per player default before the player toggles the feature.
+default-enabled: true
+
+# Tool handling
+# Damage the axe once per extra log removed.
+apply-durability: true
+# Honor the Unbreaking enchantment when applying durability.
+respect-unbreaking: true
+# Allow the axe to break. When false the axe stops at 1 durability.
+break-tool: false
+
+# Extras
+# Also break the leaves. When false the leaves decay naturally like vanilla.
+fell-leaves: false
+# Replant a matching sapling at the base when the species supports it.
+replant-sapling: false
+
+# Performance
+# Fells larger than this many logs are spread across ticks using the region scheduler.
+stagger-threshold: 64
+# Logs broken per tick while a large fell is being spread out.
+logs-per-tick: 16

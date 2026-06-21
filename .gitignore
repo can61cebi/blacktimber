@@ -1,0 +1,18 @@
+# Build output
+.gradle/
+build/
+out/
+
+# Keep the Gradle wrapper jar in version control
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.classpath
+*.project
+
+# OS / misc
+*.log
+.DS_Store
