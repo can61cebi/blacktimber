@@ -19,21 +19,39 @@ a `persistent` flag:
   tree is cut.
 - Leaves a player places by hand are `persistent = true`. They never decay.
 
-When a player breaks a log, BlackTimber does three things:
+That leaf flag is the first of three checks. A cluster of logs is felled only when all
+three agree it is wild or grown and not a build:
 
-1. Flood fills the connected logs from the broken block, using the vanilla
-   `minecraft:logs` block tag so every wood species is covered. The search follows
-   diagonals, so offset branches (acacia, cherry) and 2x2 trunks (dark oak, pale oak,
-   giant spruce and jungle) are all found. A hard cap stops it from ever running away.
-2. Looks for natural leaves (`persistent = false`) attached to the cluster. If there are
-   none, the cluster is treated as a build and nothing happens. This single rule is what
-   keeps houses safe.
-3. If it is a tree, breaks the remaining logs, drops them with the held tool, and lets
-   the leaves decay on their own the way vanilla does.
+1. Natural leaves. Leaves on a wild or grown tree are `persistent = false`. Leaves placed
+   by hand, including ones taken with Silk Touch, are `persistent = true`. A cluster with
+   no natural leaves attached is treated as a build and left alone. This keeps a plain
+   wooden house safe.
+2. Player placed logs. Every log a player places is remembered. If the cluster contains
+   even one placed log, the whole tree is left alone. This protects a tree house and a
+   hand built tree even when the natural canopy is still there.
+3. Attached structures. If crafted blocks such as planks, stairs, slabs, fences, doors,
+   trapdoors, walls, ladders or glass touch the logs, the tree counts as a build. These
+   never grow on a wild tree.
 
-Because detection is built on block tags and the leaf flag instead of a hardcoded list,
-new wood types are picked up automatically. The poplar tree announced for a later 2026
-drop will work with no code change.
+So the rule is: fell only when there are natural leaves, no placed logs, and no attached
+structure. A sapling you plant and grow is felled normally, because grown logs are never
+marked as placed. The moment you build on a tree, it is protected.
+
+When a tree qualifies, BlackTimber flood fills the connected logs from the broken block
+using the vanilla `minecraft:logs` tag, so every wood species is covered, including new
+ones like the upcoming poplar with no code change. The search follows diagonals, so
+offset branches (acacia, cherry) and 2x2 trunks (dark oak, pale oak, giant spruce and
+jungle) are all caught, with a hard cap so it never runs away. It then breaks the rest of
+the logs, drops them with the held tool, and lets the leaves decay like vanilla.
+
+## Remembering what players build
+
+To tell a grown tree from a tree house, BlackTimber records every log a player places.
+Positions are stored per chunk in the chunk PersistentDataContainer, which is saved to
+disk with the chunk, so the memory survives restarts with no database and no extra files.
+The store is owned by the chunk's region thread, matching how Folia isolates data, and is
+only touched inside block place and break events that already run on that thread. Breaking
+a tracked log forgets it, so a tree returned to a fully natural state can be felled again.
 
 ## Folia and performance
 
@@ -55,6 +73,7 @@ BlackTimber is built for that model:
 ## Features
 
 - Whole tree felling that leaves player builds untouched.
+- Protects tree houses and hand built trees by remembering placed logs and attached builds.
 - Works with every wood species through vanilla tags, including future ones.
 - Handles diagonal trunks, offset branches, and 2x2 mega trees.
 - Per player on and off switch that survives restarts.
@@ -113,6 +132,10 @@ The plugin has one command, `/blacktimber`, with the alias `/bt`.
 | `break-tool` | `false` | Allow the axe to break; false stops it at 1 durability |
 | `fell-leaves` | `false` | Also break leaves; false lets them decay naturally |
 | `replant-sapling` | `false` | Replant a matching sapling for single sapling species |
+| `protect-player-built` | `true` | Never fell a cluster that contains a player placed log |
+| `protect-structures` | `true` | Protect a tree when crafted blocks are attached to it |
+| `structure-block-threshold` | `1` | Attached crafted blocks needed to treat a tree as a build |
+| `max-tracked-per-chunk` | `4096` | Upper bound on remembered placed logs per chunk |
 | `stagger-threshold` | `64` | Fells larger than this are spread across ticks |
 | `logs-per-tick` | `16` | Logs broken per tick while spreading |
 
@@ -151,6 +174,10 @@ These are the facts the plugin is built on, verified against the live game and s
   Use on servers where that is acceptable.
 - Nether fungi (crimson and warped) have no leaves, so they are never felled.
 - Mangrove roots and the pale oak creaking heart are not logs and are left in place.
+- Logs placed before the plugin was installed are not remembered, so a pre existing tree
+  house is protected by the attached structure check and the leaf check but not by the
+  placed log check. Anything built after install is fully tracked.
+- Logs moved by pistons are not re tracked.
 
 ## License
 

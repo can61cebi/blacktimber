@@ -40,6 +40,19 @@ fell-leaves: false
 # Replant a matching sapling at the base when the species supports it.
 replant-sapling: false
 
+# Build protection
+# A tree is felled only when it is purely natural, never when a player has built on it.
+# Remember logs a player places by hand and never fell a cluster that contains one.
+# This protects tree houses and hand built trees.
+protect-player-built: true
+# Also protect a tree when crafted blocks (planks, stairs, slabs, fences, doors,
+# trapdoors, walls, ladders, glass) are attached to its logs.
+protect-structures: true
+# How many attached crafted blocks mark a tree as a build.
+structure-block-threshold: 1
+# Upper bound on remembered player placed logs per chunk. Guards chunk data size.
+max-tracked-per-chunk: 4096
+
 # Performance
 # Fells larger than this many logs are spread across ticks using the region scheduler.
 stagger-threshold: 64

@@ -14,6 +14,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,14 +36,22 @@ public final class TreeFeller {
     private static final int[][] AROUND = buildAround();
 
     private final BlackTimber plugin;
+    private final Set<Material> structureBlocks;
 
     public TreeFeller(BlackTimber plugin) {
         this.plugin = plugin;
+        this.structureBlocks = buildStructureBlocks();
     }
 
     public void fell(Player player, Block origin, ItemStack tool, BlackTimberConfig cfg) {
         List<Block> logs = collect(origin, cfg);
         if (logs.size() <= 1) {
+            return;
+        }
+        // Protect trees the player has customized: a tree house or a hand built
+        // tree. Any placed log in the cluster, or crafted blocks attached to it,
+        // mean this is a build and must not be toppled.
+        if (isCustomized(logs, cfg)) {
             return;
         }
         if (cfg.requireNaturalLeaves()
@@ -142,6 +151,31 @@ public final class TreeFeller {
                                 return true;
                             }
                         }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isCustomized(List<Block> logs, BlackTimberConfig cfg) {
+        if (cfg.protectPlayerBuilt() && plugin.placedLogs().anyPlaced(logs)) {
+            return true;
+        }
+        return cfg.protectStructures() && hasStructureAttached(logs, cfg.structureBlockThreshold());
+    }
+
+    // True once enough crafted blocks (planks, stairs, fences, doors, glass and
+    // the like) touch the logs. These never generate on a wild tree, so their
+    // presence means the player has built here.
+    private boolean hasStructureAttached(List<Block> logs, int threshold) {
+        int found = 0;
+        for (Block log : logs) {
+            for (int[] offset : FACES) {
+                Block neighbour = log.getRelative(offset[0], offset[1], offset[2]);
+                if (structureBlocks.contains(neighbour.getType())) {
+                    if (++found >= threshold) {
+                        return true;
                     }
                 }
             }
@@ -266,5 +300,26 @@ public final class TreeFeller {
             }
         }
         return all;
+    }
+
+    private static Set<Material> buildStructureBlocks() {
+        EnumSet<Material> set = EnumSet.noneOf(Material.class);
+        set.addAll(Tag.PLANKS.getValues());
+        set.addAll(Tag.WOODEN_STAIRS.getValues());
+        set.addAll(Tag.WOODEN_SLABS.getValues());
+        set.addAll(Tag.WOODEN_FENCES.getValues());
+        set.addAll(Tag.FENCE_GATES.getValues());
+        set.addAll(Tag.WOODEN_DOORS.getValues());
+        set.addAll(Tag.WOODEN_TRAPDOORS.getValues());
+        set.addAll(Tag.WALLS.getValues());
+        for (Material material : Material.values()) {
+            String name = material.name();
+            if (name.endsWith("_GLASS") || name.endsWith("_GLASS_PANE")
+                    || material == Material.GLASS || material == Material.GLASS_PANE
+                    || material == Material.LADDER || material == Material.SCAFFOLDING) {
+                set.add(material);
+            }
+        }
+        return set;
     }
 }

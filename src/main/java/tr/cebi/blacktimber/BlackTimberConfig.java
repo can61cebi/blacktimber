@@ -24,7 +24,11 @@ public record BlackTimberConfig(
         boolean fellLeaves,
         boolean replantSapling,
         int staggerThreshold,
-        int logsPerTick
+        int logsPerTick,
+        boolean protectPlayerBuilt,
+        boolean protectStructures,
+        int structureBlockThreshold,
+        int maxTrackedPerChunk
 ) {
     public enum SneakRequirement { IGNORE, REQUIRED, FORBIDDEN }
 
@@ -45,7 +49,11 @@ public record BlackTimberConfig(
                 c.getBoolean("fell-leaves", false),
                 c.getBoolean("replant-sapling", false),
                 Math.max(1, c.getInt("stagger-threshold", 64)),
-                Math.max(1, c.getInt("logs-per-tick", 16))
+                Math.max(1, c.getInt("logs-per-tick", 16)),
+                c.getBoolean("protect-player-built", true),
+                c.getBoolean("protect-structures", true),
+                Math.max(1, c.getInt("structure-block-threshold", 1)),
+                Math.max(1, c.getInt("max-tracked-per-chunk", 4096))
         );
     }
 

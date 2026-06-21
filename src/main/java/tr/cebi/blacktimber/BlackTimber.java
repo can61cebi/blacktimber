@@ -19,15 +19,18 @@ public final class BlackTimber extends JavaPlugin {
 
     private NamespacedKey toggleKey;
     private TreeFeller feller;
+    private PlacedLogStore placedLogs;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         this.toggleKey = new NamespacedKey(this, "enabled");
         this.settings = BlackTimberConfig.from(getConfig());
+        this.placedLogs = new PlacedLogStore(this);
         this.feller = new TreeFeller(this);
 
         getServer().getPluginManager().registerEvents(new BlockBreakListener(this), this);
+        getServer().getPluginManager().registerEvents(new BlockPlaceListener(this), this);
 
         PluginCommand command = getCommand("blacktimber");
         if (command != null) {
@@ -55,5 +58,9 @@ public final class BlackTimber extends JavaPlugin {
 
     public TreeFeller feller() {
         return feller;
+    }
+
+    public PlacedLogStore placedLogs() {
+        return placedLogs;
     }
 }

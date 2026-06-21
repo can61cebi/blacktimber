@@ -12,8 +12,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
 /**
- * Reacts to a player breaking a log. On Folia this handler runs on the region
- * thread that owns the broken block, so the fell can be done in place.
+ * Reacts to a player breaking a log. On Folia this runs on the region thread
+ * that owns the block, so the fell and the placed log bookkeeping both happen
+ * in place.
  */
 public final class BlockBreakListener implements Listener {
 
@@ -32,29 +33,37 @@ public final class BlockBreakListener implements Listener {
 
         Player player = event.getPlayer();
         BlackTimberConfig cfg = plugin.settings();
+        ItemStack tool = player.getInventory().getItemInMainHand();
 
+        if (shouldFell(player, tool, cfg)) {
+            plugin.feller().fell(player, block, tool, cfg);
+        }
+
+        // A placed log that is now broken is no longer placed. Run this after the
+        // fell decision so the feller still sees this block as player placed.
+        if (cfg.protectPlayerBuilt()) {
+            plugin.placedLogs().remove(block);
+        }
+    }
+
+    private boolean shouldFell(Player player, ItemStack tool, BlackTimberConfig cfg) {
         if (!player.hasPermission("blacktimber.use")) {
-            return;
+            return false;
         }
         if (cfg.survivalOnly() && player.getGameMode() != GameMode.SURVIVAL) {
-            return;
+            return false;
         }
         if (!isEnabledFor(player, cfg)) {
-            return;
+            return false;
         }
-
-        ItemStack tool = player.getInventory().getItemInMainHand();
         if (cfg.requireAxe() && !isAxe(tool)) {
-            return;
+            return false;
         }
-
-        switch (cfg.sneakRequirement()) {
-            case REQUIRED -> { if (!player.isSneaking()) return; }
-            case FORBIDDEN -> { if (player.isSneaking()) return; }
-            case IGNORE -> { }
-        }
-
-        plugin.feller().fell(player, block, tool, cfg);
+        return switch (cfg.sneakRequirement()) {
+            case REQUIRED -> player.isSneaking();
+            case FORBIDDEN -> !player.isSneaking();
+            case IGNORE -> true;
+        };
     }
 
     private boolean isEnabledFor(Player player, BlackTimberConfig cfg) {
