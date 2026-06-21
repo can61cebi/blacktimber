@@ -1,0 +1,46 @@
+name: Bug report
+description: Something is not working as described
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to file a report. Please fill in the details below.
+  - type: input
+    id: version
+    attributes:
+      label: BlackTimber version
+      placeholder: "1.2.0"
+    validations:
+      required: true
+  - type: input
+    id: server
+    attributes:
+      label: Server software and build
+      description: Folia or Paper, with the exact version
+      placeholder: "Folia 26.1.2-8"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Hold an axe and break a log
+        2. ...
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      render: text
+  - type: textarea
+    id: config
+    attributes:
+      label: config.yml, only if changed from the default
+      render: yaml

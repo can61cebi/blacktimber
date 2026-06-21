@@ -1,100 +1,110 @@
-# BlackTimber
+<div align="center">
 
-Smart tree felling for Minecraft Java Edition 26.1.2 on Folia. Break one log and the
-whole tree comes down, while wooden houses and builds stay exactly where they were.
+<img src="assets/png/banner.png" alt="BlackTimber, smart tree felling for Minecraft on Folia" width="900">
+
+<br><br>
+
+<img src="assets/png/chips.png" alt="Minecraft 26.1.2, Folia and Paper, Java 25, MIT, no dependencies, no database" width="860">
+
+<br><br>
+
+**[Download](https://github.com/can61cebi/blacktimber/releases/latest)** &nbsp;·&nbsp;
+**[Modrinth](https://modrinth.com/plugin/blacktimber)** &nbsp;·&nbsp;
+**[Configuration](#configuration)** &nbsp;·&nbsp;
+**[Commands](#commands)** &nbsp;·&nbsp;
+**[Build from source](#building-from-source)**
+
+</div>
+
+<br>
+
+BlackTimber is a smart tree felling plugin for Minecraft Java Edition, written from the
+ground up for Folia. Break a single log and the whole tree comes down in one motion,
+gathered with the axe in your hand. Wooden houses, tree houses and hand built trees are
+never touched. There is nothing to install alongside it: no library plugin, no database,
+no setup. It runs the moment you drop it in.
+
+<br>
+
+<div align="center">
+  <img src="assets/png/stack.png" alt="Engineered with Java, Paper, Folia, Minecraft, Gradle, Modrinth and GitHub" width="900">
+</div>
+
+<br>
 
 ## The problem it solves
 
-Classic timber plugins fell anything made of logs. That makes them risky near a base:
-one stray swing with an axe and a wall, a floor, or a whole tree house is gone.
-BlackTimber only fells real trees. It tells a tree apart from a build by checking for
-natural leaves, so the logs in a player build are never touched.
+Classic timber plugins fell anything made of logs. That makes them a liability near a
+base: one stray swing of an axe and a wall, a floor, or an entire tree house is gone.
+BlackTimber takes the opposite stance. It fells only what nature grew, and it proves a
+tree is wild before a single extra log is removed.
 
-## How it tells a tree from a build
+<div align="center">
+  <img src="assets/png/detection.png" alt="How BlackTimber tells a natural tree from a player build using three checks" width="900">
+</div>
 
-The check rests on one fact about how Minecraft stores leaves. Every leaf block carries
-a `persistent` flag:
+The plugin reads three signals before it acts, and a cluster of logs comes down only when
+all three agree it is wild and untouched.
 
-- Leaves on a natural or player grown tree are `persistent = false`. They decay once the
-  tree is cut.
-- Leaves a player places by hand are `persistent = true`. They never decay.
+1. **Natural leaves.** Every leaf block carries a `persistent` flag. Leaves on a wild or
+   grown tree are `persistent = false` and decay once the tree is cut. Leaves a player
+   places by hand, including ones taken with Silk Touch, are `persistent = true` and never
+   decay. A cluster with no natural leaves attached is treated as a build and left alone,
+   which keeps a plain wooden house standing.
+2. **Placed logs.** Every log a player places is remembered. If a cluster contains even
+   one placed log, the whole tree is spared. This protects a tree house and a hand built
+   tree even when a natural canopy still hangs over it.
+3. **Attached structures.** If crafted blocks such as planks, stairs, slabs, fences,
+   doors, trapdoors, walls, ladders or glass touch the logs, the cluster counts as a
+   build. These never grow on a wild tree.
 
-That leaf flag is the first of three checks. A cluster of logs is felled only when all
-three agree it is wild or grown and not a build:
+So the rule is simple: fell only when there are natural leaves, no placed logs, and no
+attached structure. A sapling you plant and grow is felled normally, because grown logs
+are never marked as placed. The moment you build on a tree, it is protected.
 
-1. Natural leaves. Leaves on a wild or grown tree are `persistent = false`. Leaves placed
-   by hand, including ones taken with Silk Touch, are `persistent = true`. A cluster with
-   no natural leaves attached is treated as a build and left alone. This keeps a plain
-   wooden house safe.
-2. Player placed logs. Every log a player places is remembered. If the cluster contains
-   even one placed log, the whole tree is left alone. This protects a tree house and a
-   hand built tree even when the natural canopy is still there.
-3. Attached structures. If crafted blocks such as planks, stairs, slabs, fences, doors,
-   trapdoors, walls, ladders or glass touch the logs, the tree counts as a build. These
-   never grow on a wild tree.
+## How a tree comes down
 
-So the rule is: fell only when there are natural leaves, no placed logs, and no attached
-structure. A sapling you plant and grow is felled normally, because grown logs are never
-marked as placed. The moment you build on a tree, it is protected.
+When a tree qualifies, BlackTimber flood fills the connected logs outward from the broken
+block using the vanilla `minecraft:logs` tag, so every wood species is covered, including
+future ones, with no code change. The search follows diagonals, so offset branches on
+acacia and cherry and the 2x2 trunks of dark oak, pale oak, giant spruce and jungle are
+all caught. A hard cap keeps it from ever running away. The remaining logs are then broken,
+dropped with the held tool, and the leaves are left to decay exactly like vanilla.
 
-When a tree qualifies, BlackTimber flood fills the connected logs from the broken block
-using the vanilla `minecraft:logs` tag, so every wood species is covered, including new
-ones like the upcoming poplar with no code change. The search follows diagonals, so
-offset branches (acacia, cherry) and 2x2 trunks (dark oak, pale oak, giant spruce and
-jungle) are all caught, with a hard cap so it never runs away. It then breaks the rest of
-the logs, drops them with the held tool, and lets the leaves decay like vanilla.
+## Player menu
 
-## Remembering what players build
+`/blacktimber` opens a small menu where each player flips three switches for themselves.
+Every choice is saved per player and survives a restart.
 
-To tell a grown tree from a tree house, BlackTimber records every log a player places.
-Positions are stored per chunk in the chunk PersistentDataContainer, which is saved to
-disk with the chunk, so the memory survives restarts with no database and no extra files.
-The store is owned by the chunk's region thread, matching how Folia isolates data, and is
-only touched inside block place and break events that already run on that thread. Breaking
-a tracked log forgets it, so a tree returned to a fully natural state can be felled again.
+<div align="center">
+  <img src="assets/png/menu-player.png" alt="The BlackTimber player menu with tree felling, break leaves and auto pickup" width="940">
+</div>
 
-## Folia and performance
+## Admin panel
 
-Folia splits the world into regions that tick in parallel on separate threads, with no
-single main thread. Block data may only be touched by the thread that owns its region.
+`/blacktimber admin` opens the live configuration panel. Boolean settings toggle on click,
+numbers step up on left click and down on right click, and holding shift takes a larger
+step. Every change is written straight to `config.yml`, with no reload needed.
 
-BlackTimber is built for that model:
+<div align="center">
+  <img src="assets/png/menu-admin.png" alt="The BlackTimber admin panel with eighteen live settings" width="960">
+</div>
 
-- The break event already runs on the region thread that owns the log, so a normal tree
-  is felled in place with no cross thread access.
-- A very large fell is spread across ticks with the region scheduler, breaking a fixed
-  budget of logs per tick so one region never stalls.
-- The hot path avoids waste: material sets are checked through cached block tags, the
-  search reuses an `ArrayDeque` frontier, visited positions are packed into a `long`, and
-  no temporary objects are created until a block is actually changed.
-- The plugin declares `folia-supported: true` and never calls the legacy Bukkit
-  scheduler, which Folia does not provide.
+## Leaf loot editor
 
-## Features
+A button in the admin panel opens the leaf loot editor. It is a drag and drop table: click
+any item in your own inventory to add it, left or right click an entry to nudge its drop
+rate, and shift click to remove it. Items are copied into the table, never consumed.
 
-- Whole tree felling that leaves player builds untouched.
-- Protects tree houses and hand built trees by remembering placed logs and attached builds.
-- Works with every wood species through vanilla tags, including future ones.
-- Handles diagonal trunks, offset branches, and 2x2 mega trees.
-- Per player menu for tree felling, leaf breaking and auto pickup, saved across restarts.
-- Optional leaf breaking that drops biome, species and size themed bonus loot.
-- Auto pickup that sends every drop straight to the player inventory.
-- In game admin menu to tune every setting, with a drag and drop leaf loot editor.
-- Optional tool durability cost that respects the Unbreaking enchantment.
-- Optional sapling replanting for single sapling species.
-- A safety cap on logs per fell, plus tick spreading for huge trees.
-- No external dependencies and no database.
+<div align="center">
+  <img src="assets/png/menu-loot.png" alt="The BlackTimber leaf loot editor" width="940">
+</div>
 
-## Requirements
-
-- Folia or Paper 26.1.2 (`api-version: 26`).
-- Java 25.
-
-## Installation
-
-1. Download `BlackTimber` from the releases page, or build it from source (below).
-2. Place the jar in the server `plugins` folder.
-3. Start the server. A `config.yml` is written on first run.
+When a player has leaf breaking on, each broken leaf can roll bonus loot on top of the
+vanilla saplings, sticks and apples. Chances are themed by biome, with cherry petals in a
+cherry grove, cocoa in the jungle, resin in a pale garden and sweet berries in a taiga,
+then scaled by tree species and size, capped per leaf, and tuned by a global multiplier.
+Admins add their own items and rates from the editor above.
 
 ## Commands
 
@@ -102,46 +112,46 @@ The plugin has one command, `/blacktimber`, with the alias `/bt`.
 
 | Command | What it does | Permission |
 | --- | --- | --- |
-| `/blacktimber` | Open your settings menu | `blacktimber.use` |
+| `/blacktimber` | Open your personal settings menu | `blacktimber.use` |
 | `/blacktimber status` | Show your settings in chat | `blacktimber.use` |
 | `/blacktimber on`, `off`, `toggle` | Turn tree felling on or off for you | `blacktimber.use` |
 | `/blacktimber leaves <on/off>` | Toggle breaking leaves for you | `blacktimber.use` |
 | `/blacktimber pickup <on/off>` | Toggle auto pickup for you | `blacktimber.use` |
-| `/blacktimber admin` | Open the admin config and loot menu | `blacktimber.admin` |
-| `/blacktimber reload` | Reload `config.yml` | `blacktimber.admin` |
+| `/blacktimber admin` | Open the admin configuration and loot panels | `blacktimber.admin` |
+| `/blacktimber reload` | Reload `config.yml` from disk | `blacktimber.admin` |
 
 ## Permissions
 
 | Node | Default | Description |
 | --- | --- | --- |
-| `blacktimber.use` | everyone | Use felling and the on, off, toggle, and status commands |
-| `blacktimber.admin` | operators | Reload the configuration |
+| `blacktimber.use` | everyone | Felling, plus the menu and the on, off, toggle and status commands |
+| `blacktimber.admin` | operators | The admin panel and the reload command |
 
-## Menus
+## Requirements
 
-`/blacktimber` opens a small menu where each player turns three things on or off:
+| Requirement | Detail |
+| --- | --- |
+| Server | Folia or Paper `26.1.2`, declared as `api-version: 26.1` |
+| Java | Java `25` |
+| Dependencies | None |
+| Database | None |
 
-- Tree felling. Break one log to drop the whole tree.
-- Break leaves. Also clear the tree's leaves, which can then drop bonus loot.
-- Auto pickup. Send every drop straight to your inventory.
+BlackTimber ships as a single jar. It links against no other plugin, pulls in no library,
+and writes no database. Player choices live in lightweight per player data, and the memory
+of placed logs is stored inside the chunk itself, so nothing extra has to be installed or
+maintained. See [build protection memory](#build-protection-memory) for how that works.
 
-`/blacktimber admin` opens the admin panel. Boolean settings toggle on click and
-numbers step with left and right click (shift for a larger step); every change is
-saved to `config.yml`. A button there opens the leaf loot editor, where you click an
-item from your inventory to add it to the loot, click an entry to nudge its rate, and
-shift click to remove it. Items are copied, never consumed.
+## Installation
 
-## Leaf loot
-
-When a player has leaf breaking on, each broken leaf can drop bonus loot on top of the
-vanilla saplings, sticks and apples. Chances are themed by biome (cherry petals in a
-cherry grove, cocoa in the jungle, resin in a pale garden, sweet berries in a taiga, and
-so on), then scaled by tree species and size, capped per leaf, and tuned by the global
-multiplier. Admins add their own items and rates from the loot editor.
+1. Download `BlackTimber.jar` from the [latest release](https://github.com/can61cebi/blacktimber/releases/latest),
+   or build it from source as shown below.
+2. Place the jar in the server `plugins` folder.
+3. Start the server. A `config.yml` is written on the first run.
 
 ## Configuration
 
-`config.yml` is reloadable with `/blacktimber reload`.
+`config.yml` is reloadable with `/blacktimber reload`, and every value here can also be
+changed live from the admin panel.
 
 | Key | Default | Description |
 | --- | --- | --- |
@@ -171,6 +181,31 @@ multiplier. Admins add their own items and rates from the loot editor.
 | `leaf-loot-multiplier` | `1.0` | Global multiplier on bonus loot chances |
 | `leaf-loot-max-chance` | `0.25` | Ceiling on any single bonus loot chance per leaf |
 
+## Folia and performance
+
+Folia splits the world into regions that tick in parallel on separate threads, with no
+single main thread. Block data may only be touched by the thread that owns its region.
+BlackTimber is built for that model from the first line.
+
+- The break event already runs on the region thread that owns the log, so a normal tree is
+  felled in place with no cross thread access.
+- A very large fell is spread across ticks with the region scheduler, breaking a fixed
+  budget of logs per tick so one region never stalls.
+- The hot path avoids waste. Material sets are checked through cached block tags, the
+  search reuses an `ArrayDeque` frontier, visited positions are packed into a `long`, and
+  no temporary objects are created until a block is actually changed.
+- The plugin declares `folia-supported: true` and never calls the legacy Bukkit scheduler,
+  which Folia does not provide.
+
+## Build protection memory
+
+To tell a grown tree from a tree house, BlackTimber records every log a player places.
+Positions are stored per chunk in the chunk `PersistentDataContainer`, which is saved to
+disk with the chunk, so the memory survives restarts with no database and no extra files.
+The store is owned by the chunk's region thread, matching how Folia isolates data, and is
+touched only inside the place and break events that already run on that thread. Breaking a
+tracked log forgets it, so a tree returned to a fully natural state can be felled again.
+
 ## Building from source
 
 ```
@@ -179,38 +214,46 @@ cd blacktimber
 ./gradlew build
 ```
 
-The jar is written to `build/libs`. The build uses the Gradle wrapper, so only a
-Java 25 toolchain is required.
+The jar is written to `build/libs`. The build uses the Gradle wrapper, so only a Java 25
+toolchain is required.
 
 ## Background notes
 
 These are the facts the plugin is built on, verified against the live game and server.
 
-- Versioning. Mojang moved to a year based scheme in late 2025. Version 26.1.2 means
+- **Versioning.** Mojang moved to a year based scheme in late 2025. Version 26.1.2 means
   year 2026, first drop, second hotfix. The Bukkit API string is `26.1.2-R0.1-SNAPSHOT`
-  and `plugin.yml` takes `api-version: 26`.
-- Block tags. `minecraft:logs` covers all overworld wood plus crimson and warped stems,
-  exposed in Bukkit as `Tag.LOGS`. Using the tag means new species are handled without a
-  code change. Bamboo is not in this tag and is left out by design.
-- Leaf persistence. Natural leaves are `persistent = false` and decay; placed leaves are
-  `persistent = true` and do not. Bukkit exposes this through
+  and `plugin.yml` takes `api-version: 26.1`.
+- **Block tags.** `minecraft:logs` covers all overworld wood plus crimson and warped
+  stems, exposed in Bukkit as `Tag.LOGS`. Using the tag means new species are handled
+  without a code change. Bamboo is not in this tag and is left out by design.
+- **Leaf persistence.** Natural leaves are `persistent = false` and decay; placed leaves
+  are `persistent = true` and do not. Bukkit exposes this through
   `org.bukkit.block.data.type.Leaves`. This flag is the core of build detection.
-- Tree shapes. Small trees are a single trunk. Dark oak and pale oak are always 2x2, and
-  mega spruce and giant jungle can be 2x2 as well. Acacia, cherry, and azalea trees grow
-  at an angle with offset canopies. A connected, diagonal aware search handles all of
-  these, which is why a simple vertical scan is not used.
+- **Tree shapes.** Small trees are a single trunk. Dark oak and pale oak are always 2x2,
+  and mega spruce and giant jungle can be 2x2 as well. Acacia, cherry and azalea trees grow
+  at an angle with offset canopies. A connected, diagonal aware search handles all of these,
+  which is why a simple vertical scan is not used.
 
 ## Notes and limits
 
 - Logs past the first are removed directly, so block protection plugins do not see them.
-  Use on servers where that is acceptable.
-- Nether fungi (crimson and warped) have no leaves, so they are never felled.
+  Use BlackTimber on servers where that is acceptable.
+- Nether fungi, crimson and warped, have no leaves, so they are never felled.
 - Mangrove roots and the pale oak creaking heart are not logs and are left in place.
 - Logs placed before the plugin was installed are not remembered, so a pre existing tree
-  house is protected by the attached structure check and the leaf check but not by the
+  house is protected by the attached structure check and the leaf check, but not by the
   placed log check. Anything built after install is fully tracked.
 - Logs moved by pistons are not re tracked.
 
+## Credits
+
+Item and block artwork in the menu illustrations is rendered from Minecraft textures, which
+are property of Mojang Studios. The visual suite uses the EB Garamond, Inter, JetBrains Mono
+and Monocraft typefaces, all open licensed. Technology marks belong to their respective
+projects. BlackTimber is an independent project and is not affiliated with Mojang or
+Microsoft.
+
 ## License
 
-Released under the MIT License. See `LICENSE`.
+Released under the MIT License. See [`LICENSE`](LICENSE).
