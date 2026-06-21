@@ -1,0 +1,1 @@
+Smart, Folia native tree felling. Break one log and the whole tree falls, while houses, tree houses and player builds stay untouched. No dependencies, no database, every setting editable in game.

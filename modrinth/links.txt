@@ -1,0 +1,5 @@
+Source code:    https://github.com/can61cebi/blacktimber
+Issue tracker:  https://github.com/can61cebi/blacktimber/issues
+Wiki page:      https://docs.cebi.tr/blacktimber
+Discord invite: (leave blank)
+Donation links: (leave blank)

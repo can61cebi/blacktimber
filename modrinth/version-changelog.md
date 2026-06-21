@@ -1,0 +1,7 @@
+- Whole tree felling that protects houses, tree houses and hand built trees.
+- Three way detection: natural leaves, remembered placed logs, attached structures.
+- Per player menu and a live admin panel, both saved across restarts.
+- Drag and drop leaf loot editor with biome themed bonus drops.
+- Built for Folia: regionized work, tick spreading, no legacy scheduler.
+- Anonymous, opt-out usage stats powering the live network chart (see TELEMETRY.md).
+- No dependencies, no database.

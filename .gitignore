@@ -16,3 +16,6 @@ out/
 # OS / misc
 *.log
 .DS_Store
+
+# Modrinth upload bundle keeps the jar locally; it ships via the GitHub release
+modrinth/*.jar
