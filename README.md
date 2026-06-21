@@ -27,6 +27,14 @@ no setup. It runs the moment you drop it in.
 <br>
 
 <div align="center">
+  <img src="https://cebi.tr/api/blacktimber/badge.svg" alt="Live BlackTimber usage: active servers and players online" width="820">
+  <br>
+  <sub>Live, anonymous usage, refreshed every few minutes. See <a href="#telemetry-and-privacy">Telemetry and privacy</a>.</sub>
+</div>
+
+<br>
+
+<div align="center">
   <img src="assets/png/stack.png" alt="Engineered with Java, Paper, Folia, Minecraft, Gradle, Modrinth and GitHub" width="900">
 </div>
 
@@ -245,6 +253,26 @@ These are the facts the plugin is built on, verified against the live game and s
   house is protected by the attached structure check and the leaf check, but not by the
   placed log check. Anything built after install is fully tracked.
 - Logs moved by pistons are not re tracked.
+
+## Telemetry and privacy
+
+The live chart near the top is real. To keep it honest, and to let players and admins
+see how widely the plugin is trusted, BlackTimber reports anonymous usage stats. Once
+every fifteen minutes a server sends a small ping that contains only:
+
+- a random id the server generated for itself, not tied to its IP or hardware,
+- the current online player count,
+- the server software, the plugin version and the Minecraft version.
+
+That is the whole payload. No IP address is stored, no player names or UUIDs are ever
+sent, and nothing is linked to any person. The data is anonymous and aggregate, in the
+same spirit as bStats and within GDPR and KVKK, which do not cover anonymous data. The
+stats service runs on `cebi.tr` and the work happens on the async scheduler, never on a
+region thread, so it cannot affect the server.
+
+Opt out completely at any time by setting `telemetry: false` in `config.yml`. The full
+disclosure, including the exact request and what is deliberately left out, is in
+[`TELEMETRY.md`](TELEMETRY.md).
 
 ## Credits
 

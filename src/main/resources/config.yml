@@ -74,3 +74,14 @@ max-tracked-per-chunk: 4096
 stagger-threshold: 64
 # Logs broken per tick while a large fell is being spread out.
 logs-per-tick: 16
+
+# Telemetry
+# Anonymous usage stats. Once every 15 minutes the plugin sends a small ping to
+# https://cebi.tr/api/blacktimber/telemetry with only this server's random id, its
+# current online player count, and its software and version strings. No IP address,
+# no player names and nothing personal is ever collected or stored. The totals power
+# the live chart in the project README. Set this to false to opt out completely.
+telemetry: true
+# A random id generated on first run so distinct servers can be counted. It is not
+# tied to your IP or hardware. Leave it blank and the plugin fills it in once.
+telemetry-server-id: ''

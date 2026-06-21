@@ -23,7 +23,7 @@ then fill each field with the values in this document.
 | 8 | License | `MIT` |
 | 9 | Links | source, issues (see [Links](#7-external-links)) |
 | 10 | Gallery | seven images (see [Gallery](#8-gallery)) |
-| 11 | First version | `1.2.0` (see [Version](#9-first-version-upload)) |
+| 11 | First version | `1.3.0` (see [Version](#9-first-version-upload)) |
 
 Modrinth requires a project to be reasonably complete before it can be submitted for
 review: a clear title, a real summary, a meaningful description, at least one category, the
@@ -142,6 +142,7 @@ Bonus leaf loot is built by hand in a drag and drop editor.
 - Optional leaf breaking that drops biome, species and size themed bonus loot.
 - In game admin panel for every setting, with a drag and drop leaf loot editor.
 - Built for Folia: regionized, tick spread, no legacy scheduler.
+- Anonymous, opt-out usage stats that power a live network chart.
 - No external dependencies and no database.
 
 ## Requirements
@@ -159,6 +160,15 @@ Bonus leaf loot is built by hand in a drag and drop editor.
 | `/blacktimber reload` | `blacktimber.admin` |
 
 `blacktimber.use` defaults to everyone, `blacktimber.admin` defaults to operators.
+
+## Telemetry
+
+BlackTimber reports anonymous usage stats every fifteen minutes: a random server id, the
+online player count, and the software and version strings. No IP address is stored, no
+player names or UUIDs are ever sent, and nothing is linked to any person. It powers the
+live usage chart and follows the bStats model. Opt out completely with `telemetry: false`
+in `config.yml`. Full disclosure is in
+[TELEMETRY.md](https://github.com/can61cebi/blacktimber/blob/main/TELEMETRY.md).
 
 Full documentation, configuration reference and source are on
 [GitHub](https://github.com/can61cebi/blacktimber).
@@ -213,24 +223,23 @@ After the project page is filled in, add the first version.
 
 | Field | Value |
 | --- | --- |
-| Version number | `1.2.0` |
-| Version title | `BlackTimber 1.2.0` |
+| Version number | `1.3.0` |
+| Version title | `BlackTimber 1.3.0` |
 | Release channel | `Release` |
 | Loaders | `Paper`, `Folia` |
 | Game versions | `26.1.2` |
 | Dependencies | None |
-| File | `BlackTimber.jar` from `build/libs` or the GitHub release |
+| File | `BlackTimber-1.3.0.jar` from `build/libs` or the GitHub release |
 
-Suggested changelog for the first version:
+Suggested changelog:
 
 ```markdown
-First public release.
-
 - Whole tree felling that protects houses, tree houses and hand built trees.
 - Three way detection: natural leaves, remembered placed logs, attached structures.
 - Per player menu and a live admin panel, both saved across restarts.
 - Drag and drop leaf loot editor with biome themed bonus drops.
 - Built for Folia: regionized work, tick spreading, no legacy scheduler.
+- Anonymous, opt-out usage stats powering the live network chart (see TELEMETRY.md).
 - No dependencies, no database.
 ```
 

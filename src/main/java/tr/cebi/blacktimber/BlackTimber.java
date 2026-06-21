@@ -42,6 +42,8 @@ public final class BlackTimber extends JavaPlugin {
             command.setTabCompleter(handler);
         }
 
+        new Telemetry(this).start();
+
         getLogger().info("BlackTimber enabled. Tree felling ready, builds protected.");
     }
 
