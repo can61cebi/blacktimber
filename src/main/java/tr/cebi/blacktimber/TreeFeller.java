@@ -3,8 +3,12 @@ package tr.cebi.blacktimber;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.SoundGroup;
 import org.bukkit.Tag;
+import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Leaves;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -17,16 +21,19 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Core felling logic.
  *
- * Steps: flood fill the connected logs (bounded), confirm the cluster is a real
- * tree by finding natural leaves, then break every log but the one the player is
- * already breaking. Small trees are felled in place; very large fells are spread
- * across ticks with the region scheduler so a single region never stalls.
+ * When a tree qualifies, the feller takes over the break entirely (the listener
+ * cancels the event) and removes every connected log, plus the attached natural
+ * leaves when the player has leaf breaking on. Drops either fall in the world or
+ * go straight to the player inventory, and broken leaves can roll bonus loot.
+ * Small trees are handled in place; large fells are spread across ticks with the
+ * region scheduler so a single region never stalls.
  */
 public final class TreeFeller {
 
@@ -34,6 +41,8 @@ public final class TreeFeller {
             {1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, -1}
     };
     private static final int[][] AROUND = buildAround();
+
+    private record FellContext(String biomeId, Material species, int logCount, boolean autoPickup) { }
 
     private final BlackTimber plugin;
     private final Set<Material> structureBlocks;
@@ -43,62 +52,72 @@ public final class TreeFeller {
         this.structureBlocks = buildStructureBlocks();
     }
 
-    public void fell(Player player, Block origin, ItemStack tool, BlackTimberConfig cfg) {
+    /**
+     * Tries to fell the tree the broken log belongs to. Returns true when the
+     * feller has taken over (the caller should cancel the break), false when the
+     * block should break normally.
+     */
+    public boolean fell(Player player, Block origin, ItemStack tool, BlackTimberConfig cfg) {
         List<Block> logs = collect(origin, cfg);
         if (logs.size() <= 1) {
-            return;
+            return false;
         }
-        // Protect trees the player has customized: a tree house or a hand built
-        // tree. Any placed log in the cluster, or crafted blocks attached to it,
-        // mean this is a build and must not be toppled.
         if (isCustomized(logs, cfg)) {
-            return;
+            return false;
         }
         if (cfg.requireNaturalLeaves()
                 && !hasNaturalLeaves(logs, cfg.leafSearchRadius(), cfg.minNaturalLeaves())) {
-            return;
+            return false;
         }
 
-        ArrayDeque<Block> pending = new ArrayDeque<>(logs.size());
+        boolean autoPickup = plugin.userSettings().get(player, UserSettings.Option.PICKUP);
+        boolean breakLeaves = plugin.userSettings().get(player, UserSettings.Option.LEAVES);
+
+        ItemStack dropTool = tool.clone();
+        applyDurability(player, tool, logs.size(), cfg);
+
         Block base = origin;
+        ArrayDeque<Block> work = new ArrayDeque<>(logs.size() * 2);
         for (Block log : logs) {
-            if (!isSame(log, origin)) {
-                pending.add(log);
-            }
+            work.add(log);
             if (log.getY() < base.getY()) {
                 base = log;
             }
         }
-        if (pending.isEmpty()) {
-            return;
+        if (breakLeaves) {
+            work.addAll(collectLeaves(logs, cfg.leafSearchRadius()));
         }
 
-        ItemStack dropTool = tool.clone();
-        applyDurability(player, tool, pending.size(), cfg);
-
+        FellContext ctx = new FellContext(
+                origin.getBiome().getKey().toString(),
+                origin.getType(),
+                logs.size(),
+                autoPickup);
+        List<ItemStack> sink = autoPickup ? new ArrayList<>() : null;
         Block replantBase = base;
 
-        if (pending.size() <= cfg.staggerThreshold()) {
-            while (!pending.isEmpty()) {
-                breakLog(pending.poll(), dropTool, cfg);
+        if (work.size() <= cfg.staggerThreshold()) {
+            while (!work.isEmpty()) {
+                breakAndCollect(work.poll(), dropTool, ctx, sink);
             }
+            deliver(player, sink, false);
             finish(replantBase, cfg);
-            return;
+            return true;
         }
 
-        // Large fell: stay on the region that owns the origin and break a budget
-        // of logs each tick. A tree always sits within the region's safe radius.
         Location anchor = origin.getLocation();
         Bukkit.getRegionScheduler().runAtFixedRate(plugin, anchor, task -> {
             int budget = cfg.logsPerTick();
-            while (budget-- > 0 && !pending.isEmpty()) {
-                breakLog(pending.poll(), dropTool, cfg);
+            while (budget-- > 0 && !work.isEmpty()) {
+                breakAndCollect(work.poll(), dropTool, ctx, sink);
             }
-            if (pending.isEmpty()) {
+            if (work.isEmpty()) {
+                deliver(player, sink, true);
                 finish(replantBase, cfg);
                 task.cancel();
             }
         }, 1L, 1L);
+        return true;
     }
 
     private List<Block> collect(Block origin, BlackTimberConfig cfg) {
@@ -129,10 +148,54 @@ public final class TreeFeller {
         return logs;
     }
 
-    /**
-     * A cluster counts as a tree only if natural leaves are attached. Player
-     * placed leaves are persistent and ignored, which is what protects builds.
-     */
+    private List<Block> collectLeaves(List<Block> logs, int radius) {
+        List<Block> leaves = new ArrayList<>();
+        Set<Long> seen = new HashSet<>();
+        for (Block log : logs) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dy = -radius; dy <= radius; dy++) {
+                    for (int dz = -radius; dz <= radius; dz++) {
+                        Block neighbour = log.getRelative(dx, dy, dz);
+                        if (!Tag.LEAVES.isTagged(neighbour.getType())) {
+                            continue;
+                        }
+                        if (!(neighbour.getBlockData() instanceof Leaves data) || data.isPersistent()) {
+                            continue;
+                        }
+                        if (seen.add(key(neighbour.getX(), neighbour.getY(), neighbour.getZ()))) {
+                            leaves.add(neighbour);
+                        }
+                    }
+                }
+            }
+        }
+        return leaves;
+    }
+
+    private boolean isCustomized(List<Block> logs, BlackTimberConfig cfg) {
+        if (cfg.protectPlayerBuilt() && plugin.placedLogs().anyPlaced(logs)) {
+            return true;
+        }
+        return cfg.protectStructures() && hasStructureAttached(logs, cfg.structureBlockThreshold());
+    }
+
+    // True once enough crafted blocks (planks, stairs, fences, doors, glass and
+    // the like) touch the logs. These never generate on a wild tree.
+    private boolean hasStructureAttached(List<Block> logs, int threshold) {
+        int found = 0;
+        for (Block log : logs) {
+            for (int[] offset : FACES) {
+                Block neighbour = log.getRelative(offset[0], offset[1], offset[2]);
+                if (structureBlocks.contains(neighbour.getType())) {
+                    if (++found >= threshold) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     private boolean hasNaturalLeaves(List<Block> logs, int radius, int min) {
         if (min <= 0) {
             return true;
@@ -158,44 +221,59 @@ public final class TreeFeller {
         return false;
     }
 
-    private boolean isCustomized(List<Block> logs, BlackTimberConfig cfg) {
-        if (cfg.protectPlayerBuilt() && plugin.placedLogs().anyPlaced(logs)) {
-            return true;
-        }
-        return cfg.protectStructures() && hasStructureAttached(logs, cfg.structureBlockThreshold());
-    }
-
-    // True once enough crafted blocks (planks, stairs, fences, doors, glass and
-    // the like) touch the logs. These never generate on a wild tree, so their
-    // presence means the player has built here.
-    private boolean hasStructureAttached(List<Block> logs, int threshold) {
-        int found = 0;
-        for (Block log : logs) {
-            for (int[] offset : FACES) {
-                Block neighbour = log.getRelative(offset[0], offset[1], offset[2]);
-                if (structureBlocks.contains(neighbour.getType())) {
-                    if (++found >= threshold) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    private void breakLog(Block block, ItemStack dropTool, BlackTimberConfig cfg) {
-        if (!Tag.LOGS.isTagged(block.getType())) {
+    private void breakAndCollect(Block block, ItemStack dropTool, FellContext ctx, List<ItemStack> sink) {
+        Material type = block.getType();
+        boolean leaf = Tag.LEAVES.isTagged(type);
+        if (!leaf && !Tag.LOGS.isTagged(type)) {
             return;
         }
-        block.breakNaturally(dropTool);
-        if (cfg.fellLeaves()) {
-            for (int[] offset : FACES) {
-                Block neighbour = block.getRelative(offset[0], offset[1], offset[2]);
-                if (Tag.LEAVES.isTagged(neighbour.getType())
-                        && neighbour.getBlockData() instanceof Leaves leaf && !leaf.isPersistent()) {
-                    neighbour.breakNaturally();
-                }
+        if (leaf && (!(block.getBlockData() instanceof Leaves data) || data.isPersistent())) {
+            return;
+        }
+
+        List<ItemStack> drops = new ArrayList<>(block.getDrops(dropTool));
+        if (leaf) {
+            plugin.leafLoot().roll(ctx.biomeId(), ctx.species(), ctx.logCount(), drops);
+        }
+
+        BlockData blockData = block.getBlockData();
+        World world = block.getWorld();
+        Location center = block.getLocation().add(0.5, 0.5, 0.5);
+        block.setType(Material.AIR, false);
+        world.spawnParticle(Particle.BLOCK, center, 8, 0.25, 0.25, 0.25, 0.0, blockData);
+        SoundGroup sound = blockData.getSoundGroup();
+        world.playSound(center, sound.getBreakSound(), sound.getVolume(), sound.getPitch());
+
+        if (ctx.autoPickup()) {
+            sink.addAll(drops);
+        } else {
+            for (ItemStack drop : drops) {
+                world.dropItemNaturally(center, drop);
             }
+        }
+    }
+
+    private void deliver(Player player, List<ItemStack> picked, boolean deferred) {
+        if (picked == null || picked.isEmpty()) {
+            return;
+        }
+        ItemStack[] items = picked.toArray(new ItemStack[0]);
+        if (deferred) {
+            player.getScheduler().run(plugin, task -> giveDirect(player, items), null);
+        } else {
+            giveDirect(player, items);
+        }
+    }
+
+    private void giveDirect(Player player, ItemStack[] items) {
+        Map<Integer, ItemStack> overflow = player.getInventory().addItem(items);
+        if (overflow.isEmpty()) {
+            return;
+        }
+        Location loc = player.getLocation();
+        World world = player.getWorld();
+        for (ItemStack left : overflow.values()) {
+            world.dropItemNaturally(loc, left);
         }
     }
 
@@ -277,11 +355,6 @@ public final class TreeFeller {
         return Tag.DIRT.isTagged(material) || material == Material.FARMLAND;
     }
 
-    private static boolean isSame(Block a, Block b) {
-        return a.getX() == b.getX() && a.getY() == b.getY() && a.getZ() == b.getZ()
-                && a.getWorld().equals(b.getWorld());
-    }
-
     private static long key(int x, int y, int z) {
         return ((long) (x & 0x3FFFFFF) << 38) | ((long) (z & 0x3FFFFFF) << 12) | (y & 0xFFF);
     }
@@ -302,7 +375,7 @@ public final class TreeFeller {
         return all;
     }
 
-    private static Set<Material> buildStructureBlocks() {
+    private Set<Material> buildStructureBlocks() {
         EnumSet<Material> set = EnumSet.noneOf(Material.class);
         set.addAll(Tag.PLANKS.getValues());
         set.addAll(Tag.WOODEN_STAIRS.getValues());

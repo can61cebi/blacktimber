@@ -18,17 +18,21 @@ public record BlackTimberConfig(
         SneakRequirement sneakRequirement,
         boolean survivalOnly,
         boolean defaultEnabled,
+        boolean defaultBreakLeaves,
+        boolean defaultAutoPickup,
         boolean applyDurability,
         boolean respectUnbreaking,
         boolean breakTool,
-        boolean fellLeaves,
         boolean replantSapling,
         int staggerThreshold,
         int logsPerTick,
         boolean protectPlayerBuilt,
         boolean protectStructures,
         int structureBlockThreshold,
-        int maxTrackedPerChunk
+        int maxTrackedPerChunk,
+        boolean leafLootEnabled,
+        double leafLootMultiplier,
+        double leafLootMaxChance
 ) {
     public enum SneakRequirement { IGNORE, REQUIRED, FORBIDDEN }
 
@@ -43,18 +47,29 @@ public record BlackTimberConfig(
                 parseSneak(c.getString("sneak-requirement", "ignore")),
                 c.getBoolean("survival-only", true),
                 c.getBoolean("default-enabled", true),
+                c.getBoolean("default-break-leaves", false),
+                c.getBoolean("default-auto-pickup", false),
                 c.getBoolean("apply-durability", true),
                 c.getBoolean("respect-unbreaking", true),
                 c.getBoolean("break-tool", false),
-                c.getBoolean("fell-leaves", false),
                 c.getBoolean("replant-sapling", false),
                 Math.max(1, c.getInt("stagger-threshold", 64)),
                 Math.max(1, c.getInt("logs-per-tick", 16)),
                 c.getBoolean("protect-player-built", true),
                 c.getBoolean("protect-structures", true),
                 Math.max(1, c.getInt("structure-block-threshold", 1)),
-                Math.max(1, c.getInt("max-tracked-per-chunk", 4096))
+                Math.max(1, c.getInt("max-tracked-per-chunk", 4096)),
+                c.getBoolean("leaf-loot-enabled", true),
+                Math.max(0.0, c.getDouble("leaf-loot-multiplier", 1.0)),
+                clamp01(c.getDouble("leaf-loot-max-chance", 0.25))
         );
+    }
+
+    private static double clamp01(double value) {
+        if (value < 0.0) {
+            return 0.0;
+        }
+        return Math.min(value, 1.0);
     }
 
     private static SneakRequirement parseSneak(String value) {

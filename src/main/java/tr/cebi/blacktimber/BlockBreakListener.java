@@ -9,12 +9,11 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.persistence.PersistentDataType;
 
 /**
  * Reacts to a player breaking a log. On Folia this runs on the region thread
- * that owns the block, so the fell and the placed log bookkeeping both happen
- * in place.
+ * that owns the block. When the tree qualifies, the feller takes over the whole
+ * break and we cancel the event so vanilla does not also break the origin.
  */
 public final class BlockBreakListener implements Listener {
 
@@ -35,8 +34,8 @@ public final class BlockBreakListener implements Listener {
         BlackTimberConfig cfg = plugin.settings();
         ItemStack tool = player.getInventory().getItemInMainHand();
 
-        if (shouldFell(player, tool, cfg)) {
-            plugin.feller().fell(player, block, tool, cfg);
+        if (shouldFell(player, tool, cfg) && plugin.feller().fell(player, block, tool, cfg)) {
+            event.setCancelled(true);
         }
 
         // A placed log that is now broken is no longer placed. Run this after the
@@ -53,7 +52,7 @@ public final class BlockBreakListener implements Listener {
         if (cfg.survivalOnly() && player.getGameMode() != GameMode.SURVIVAL) {
             return false;
         }
-        if (!isEnabledFor(player, cfg)) {
+        if (!plugin.userSettings().get(player, UserSettings.Option.TIMBER)) {
             return false;
         }
         if (cfg.requireAxe() && !isAxe(tool)) {
@@ -64,11 +63,6 @@ public final class BlockBreakListener implements Listener {
             case FORBIDDEN -> !player.isSneaking();
             case IGNORE -> true;
         };
-    }
-
-    private boolean isEnabledFor(Player player, BlackTimberConfig cfg) {
-        Byte state = player.getPersistentDataContainer().get(plugin.toggleKey(), PersistentDataType.BYTE);
-        return state == null ? cfg.defaultEnabled() : state == (byte) 1;
     }
 
     private static boolean isAxe(ItemStack item) {

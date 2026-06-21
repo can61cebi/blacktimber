@@ -76,7 +76,10 @@ BlackTimber is built for that model:
 - Protects tree houses and hand built trees by remembering placed logs and attached builds.
 - Works with every wood species through vanilla tags, including future ones.
 - Handles diagonal trunks, offset branches, and 2x2 mega trees.
-- Per player on and off switch that survives restarts.
+- Per player menu for tree felling, leaf breaking and auto pickup, saved across restarts.
+- Optional leaf breaking that drops biome, species and size themed bonus loot.
+- Auto pickup that sends every drop straight to the player inventory.
+- In game admin menu to tune every setting, with a drag and drop leaf loot editor.
 - Optional tool durability cost that respects the Unbreaking enchantment.
 - Optional sapling replanting for single sapling species.
 - A safety cap on logs per fell, plus tick spreading for huge trees.
@@ -99,10 +102,12 @@ The plugin has one command, `/blacktimber`, with the alias `/bt`.
 
 | Command | What it does | Permission |
 | --- | --- | --- |
-| `/blacktimber status` | Show whether felling is on for you | `blacktimber.use` |
-| `/blacktimber on` | Turn felling on for you | `blacktimber.use` |
-| `/blacktimber off` | Turn felling off for you | `blacktimber.use` |
-| `/blacktimber toggle` | Flip your setting | `blacktimber.use` |
+| `/blacktimber` | Open your settings menu | `blacktimber.use` |
+| `/blacktimber status` | Show your settings in chat | `blacktimber.use` |
+| `/blacktimber on`, `off`, `toggle` | Turn tree felling on or off for you | `blacktimber.use` |
+| `/blacktimber leaves <on/off>` | Toggle breaking leaves for you | `blacktimber.use` |
+| `/blacktimber pickup <on/off>` | Toggle auto pickup for you | `blacktimber.use` |
+| `/blacktimber admin` | Open the admin config and loot menu | `blacktimber.admin` |
 | `/blacktimber reload` | Reload `config.yml` | `blacktimber.admin` |
 
 ## Permissions
@@ -111,6 +116,28 @@ The plugin has one command, `/blacktimber`, with the alias `/bt`.
 | --- | --- | --- |
 | `blacktimber.use` | everyone | Use felling and the on, off, toggle, and status commands |
 | `blacktimber.admin` | operators | Reload the configuration |
+
+## Menus
+
+`/blacktimber` opens a small menu where each player turns three things on or off:
+
+- Tree felling. Break one log to drop the whole tree.
+- Break leaves. Also clear the tree's leaves, which can then drop bonus loot.
+- Auto pickup. Send every drop straight to your inventory.
+
+`/blacktimber admin` opens the admin panel. Boolean settings toggle on click and
+numbers step with left and right click (shift for a larger step); every change is
+saved to `config.yml`. A button there opens the leaf loot editor, where you click an
+item from your inventory to add it to the loot, click an entry to nudge its rate, and
+shift click to remove it. Items are copied, never consumed.
+
+## Leaf loot
+
+When a player has leaf breaking on, each broken leaf can drop bonus loot on top of the
+vanilla saplings, sticks and apples. Chances are themed by biome (cherry petals in a
+cherry grove, cocoa in the jungle, resin in a pale garden, sweet berries in a taiga, and
+so on), then scaled by tree species and size, capped per leaf, and tuned by the global
+multiplier. Admins add their own items and rates from the loot editor.
 
 ## Configuration
 
@@ -126,7 +153,9 @@ The plugin has one command, `/blacktimber`, with the alias `/bt`.
 | `require-axe` | `true` | Only trigger while holding an axe |
 | `sneak-requirement` | `ignore` | `ignore`, `required`, or `forbidden` |
 | `survival-only` | `true` | Skip creative and spectator |
-| `default-enabled` | `true` | Per player default before they toggle |
+| `default-enabled` | `true` | Per player default: tree felling |
+| `default-break-leaves` | `false` | Per player default: break leaves |
+| `default-auto-pickup` | `false` | Per player default: drops to inventory |
 | `apply-durability` | `true` | Damage the axe per extra log |
 | `respect-unbreaking` | `true` | Honor the Unbreaking enchantment |
 | `break-tool` | `false` | Allow the axe to break; false stops it at 1 durability |
@@ -138,6 +167,9 @@ The plugin has one command, `/blacktimber`, with the alias `/bt`.
 | `max-tracked-per-chunk` | `4096` | Upper bound on remembered placed logs per chunk |
 | `stagger-threshold` | `64` | Fells larger than this are spread across ticks |
 | `logs-per-tick` | `16` | Logs broken per tick while spreading |
+| `leaf-loot-enabled` | `true` | Bonus loot from broken leaves |
+| `leaf-loot-multiplier` | `1.0` | Global multiplier on bonus loot chances |
+| `leaf-loot-max-chance` | `0.25` | Ceiling on any single bonus loot chance per leaf |
 
 ## Building from source
 

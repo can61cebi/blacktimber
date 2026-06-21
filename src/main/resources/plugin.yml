@@ -11,7 +11,7 @@ commands:
   blacktimber:
     description: BlackTimber controls.
     aliases: [bt]
-    usage: /blacktimber <on|off|toggle|status|reload>
+    usage: /blacktimber [menu|on|off|leaves|pickup|admin|reload]
 
 permissions:
   blacktimber.use:

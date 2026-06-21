@@ -23,8 +23,13 @@ require-axe: true
 sneak-requirement: ignore
 # Skip creative and spectator mode.
 survival-only: true
-# Per player default before the player toggles the feature.
+# Per player defaults (each player can override these in the menu).
+# Whether tree felling is on for a player before they toggle it.
 default-enabled: true
+# Whether felling also breaks the tree's leaves. Off lets them decay like vanilla.
+default-break-leaves: false
+# Whether drops from felling go straight to the player inventory.
+default-auto-pickup: false
 
 # Tool handling
 # Damage the axe once per extra log removed.
@@ -35,10 +40,21 @@ respect-unbreaking: true
 break-tool: false
 
 # Extras
-# Also break the leaves. When false the leaves decay naturally like vanilla.
-fell-leaves: false
 # Replant a matching sapling at the base when the species supports it.
 replant-sapling: false
+
+# Leaf loot
+# When a player has leaf breaking on, broken leaves can drop bonus loot themed to
+# the biome, tree species and tree size. Vanilla saplings, sticks and apples still
+# drop on top of this.
+leaf-loot-enabled: true
+# Global multiplier on every bonus loot chance. Raise or lower the whole economy.
+leaf-loot-multiplier: 1.0
+# Hard ceiling on any single bonus loot chance per leaf, after the multipliers.
+leaf-loot-max-chance: 0.25
+# Admin added loot, edited from the in game loot editor. Each entry is a Base64
+# item, a chance and a biome id ("*" means any biome).
+leaf-loot-custom: []
 
 # Build protection
 # A tree is felled only when it is purely natural, never when a player has built on it.
