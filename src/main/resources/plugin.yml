@@ -1,7 +1,7 @@
 name: BlackTimber
 version: '${version}'
 main: tr.cebi.blacktimber.BlackTimber
-api-version: '26'
+api-version: '26.1'
 folia-supported: true
 description: Smart tree felling that leaves player builds untouched.
 author: can61cebi
