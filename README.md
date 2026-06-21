@@ -1,5 +1,9 @@
 <div align="center">
 
+<img src="assets/icon.svg" alt="BlackTimber icon" width="96">
+
+<br><br>
+
 <img src="assets/png/banner.png" alt="BlackTimber, smart tree felling for Minecraft on Folia" width="900">
 
 <br><br>
@@ -10,9 +14,9 @@
 
 **[Download](https://github.com/can61cebi/blacktimber/releases/latest)** &nbsp;·&nbsp;
 **[Modrinth](https://modrinth.com/plugin/blacktimber)** &nbsp;·&nbsp;
+**[Documentation](https://docs.cebi.tr/blacktimber)** &nbsp;·&nbsp;
 **[Configuration](#configuration)** &nbsp;·&nbsp;
-**[Commands](#commands)** &nbsp;·&nbsp;
-**[Build from source](#building-from-source)**
+**[Commands](#commands)**
 
 </div>
 
@@ -22,15 +26,8 @@ BlackTimber is a smart tree felling plugin for Minecraft Java Edition, written f
 ground up for Folia. Break a single log and the whole tree comes down in one motion,
 gathered with the axe in your hand. Wooden houses, tree houses and hand built trees are
 never touched. There is nothing to install alongside it: no library plugin, no database,
-no setup. It runs the moment you drop it in.
-
-<br>
-
-<div align="center">
-  <img src="https://cebi.tr/api/blacktimber/badge.svg" alt="Live BlackTimber usage: active servers and players online" width="820">
-  <br>
-  <sub>Live, anonymous usage, refreshed every few minutes. See <a href="#telemetry-and-privacy">Telemetry and privacy</a>.</sub>
-</div>
+no setup. It runs the moment you drop it in. There is a full write up on
+[docs.cebi.tr](https://docs.cebi.tr/blacktimber) as well.
 
 <br>
 
@@ -256,9 +253,15 @@ These are the facts the plugin is built on, verified against the live game and s
 
 ## Telemetry and privacy
 
-The live chart near the top is real. To keep it honest, and to let players and admins
-see how widely the plugin is trusted, BlackTimber reports anonymous usage stats. Once
-every fifteen minutes a server sends a small ping that contains only:
+<div align="center">
+  <img src="https://cebi.tr/api/blacktimber/badge.svg" alt="Live BlackTimber usage: active servers and players online" width="820">
+</div>
+
+<br>
+
+The chart above is live. To keep it honest, and to let players and admins see how widely
+the plugin is trusted, BlackTimber reports anonymous usage stats. Once every fifteen
+minutes a server sends a small ping that contains only:
 
 - a random id the server generated for itself, not tied to its IP or hardware,
 - the current online player count,

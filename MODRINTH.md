@@ -36,6 +36,7 @@ environment set, and a license. All of that is provided below.
 | Field | Value | Notes |
 | --- | --- | --- |
 | Name | `BlackTimber` | Shown as the project title |
+| Icon | `assets/icon-512.png` | Upload as the project icon. The square master is `assets/icon.svg` |
 | Slug | `blacktimber` | Final URL becomes `modrinth.com/plugin/blacktimber`. 3 to 64 characters |
 | Project type | Plugin | Selected indirectly: add the Paper and Folia loaders and Modrinth lists it as a plugin |
 | Visibility | Public, Listed | Set after the first version passes review |
@@ -170,7 +171,8 @@ live usage chart and follows the bStats model. Opt out completely with `telemetr
 in `config.yml`. Full disclosure is in
 [TELEMETRY.md](https://github.com/can61cebi/blacktimber/blob/main/TELEMETRY.md).
 
-Full documentation, configuration reference and source are on
+A full write up lives at [docs.cebi.tr](https://docs.cebi.tr/blacktimber); the
+configuration reference and source are on
 [GitHub](https://github.com/can61cebi/blacktimber).
 ````
 
@@ -191,7 +193,7 @@ descriptions without a wall of text.
 | --- | --- |
 | Source | `https://github.com/can61cebi/blacktimber` |
 | Issue tracker | `https://github.com/can61cebi/blacktimber/issues` |
-| Wiki | `https://github.com/can61cebi/blacktimber#readme` |
+| Wiki | `https://docs.cebi.tr/blacktimber` |
 | Discord | leave empty unless you run one |
 
 License: choose `MIT` from the SPDX list. It matches the `LICENSE` file in the repository.
