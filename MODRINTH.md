@@ -208,7 +208,7 @@ Upload these from `assets/png/` in this order. Captions are ready to paste.
 | --- | --- | --- | --- |
 | 1 | `banner.png` | BlackTimber, smart tree felling for Folia and Paper | Yes |
 | 2 | `detection.png` | Three checks tell a wild tree from a player build | No |
-| 3 | `menu-player.png` | The per player menu: felling, leaves, auto pickup | No |
+| 3 | `menu-player.png` | The per player menu: felling, leaves, auto pickup, replant | No |
 | 4 | `menu-admin.png` | The admin panel: eighteen settings, edited live | No |
 | 5 | `menu-loot.png` | The drag and drop leaf loot editor | No |
 | 6 | `stack.png` | A lean, modern stack | No |
