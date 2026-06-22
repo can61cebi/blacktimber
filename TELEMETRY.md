@@ -21,7 +21,7 @@ Once every fifteen minutes, each server sends one HTTP POST to
   "server_id": "f2a7c1e0-9b3d-4a6e-8c11-7e9b2d4f6a08",
   "players": 12,
   "software": "Folia",
-  "plugin_version": "1.3.0",
+  "plugin_version": "1.4.0",
   "mc_version": "26.1.2"
 }
 ```

@@ -8,7 +8,7 @@ top to bottom.
 
 | File | Used for |
 | --- | --- |
-| `BlackTimber-1.3.0.jar` | The version file you upload (also on the GitHub release) |
+| `BlackTimber-1.4.0.jar` | The version file you upload (also on the GitHub release) |
 | `description.md` | Paste into the Description editor |
 | `summary.txt` | Paste into the Summary field on the General page |
 | `version-changelog.md` | Paste into the version Changelog field |
@@ -24,13 +24,13 @@ Settings sidebar, **Versions**, then **Create version**.
 
 | Field | Value |
 | --- | --- |
-| Name | `BlackTimber 1.3.0` |
-| Version number | `1.3.0` |
+| Name | `BlackTimber 1.4.0` |
+| Version number | `1.4.0` |
 | Release channel | `Release` |
 | Loaders | `Paper` and `Folia` |
 | Game versions | `26.1.2` |
 | Dependencies | none |
-| Files | upload `BlackTimber-1.3.0.jar` |
+| Files | upload `BlackTimber-1.4.0.jar` |
 | Changelog | paste the contents of `version-changelog.md` |
 
 Publish the version. This also unlocks the Tags page (step 7).

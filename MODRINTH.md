@@ -23,7 +23,7 @@ then fill each field with the values in this document.
 | 8 | License | `MIT` |
 | 9 | Links | source, issues (see [Links](#7-external-links)) |
 | 10 | Gallery | seven images (see [Gallery](#8-gallery)) |
-| 11 | First version | `1.3.0` (see [Version](#9-first-version-upload)) |
+| 11 | First version | `1.4.0` (see [Version](#9-first-version-upload)) |
 
 Modrinth requires a project to be reasonably complete before it can be submitted for
 review: a clear title, a real summary, a meaningful description, at least one category, the
@@ -225,25 +225,18 @@ After the project page is filled in, add the first version.
 
 | Field | Value |
 | --- | --- |
-| Version number | `1.3.0` |
-| Version title | `BlackTimber 1.3.0` |
+| Version number | `1.4.0` |
+| Version title | `BlackTimber 1.4.0` |
 | Release channel | `Release` |
 | Loaders | `Paper`, `Folia` |
 | Game versions | `26.1.2` |
 | Dependencies | None |
-| File | `BlackTimber-1.3.0.jar` from `build/libs` or the GitHub release |
+| File | `BlackTimber-1.4.0.jar` from `build/libs` or the GitHub release |
 
-Suggested changelog:
-
-```markdown
-- Whole tree felling that protects houses, tree houses and hand built trees.
-- Three way detection: natural leaves, remembered placed logs, attached structures.
-- Per player menu and a live admin panel, both saved across restarts.
-- Drag and drop leaf loot editor with biome themed bonus drops.
-- Built for Folia: regionized work, tick spreading, no legacy scheduler.
-- Anonymous, opt-out usage stats powering the live network chart (see TELEMETRY.md).
-- No dependencies, no database.
-```
+Changelog: paste the contents of [`modrinth/version-changelog.md`](modrinth/version-changelog.md).
+It covers the 1.4.0 fixes (vanilla-accurate leaf clearing and durability-bounded felling).
+When publishing a new version later, follow [`modrinth/UPDATE.md`](modrinth/UPDATE.md), which
+is the short update-only flow.
 
 ---
 

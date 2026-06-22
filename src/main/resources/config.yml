@@ -8,8 +8,16 @@
 require-natural-leaves: true
 # Minimum number of natural leaves that must be attached to count as a tree.
 min-natural-leaves: 1
-# Distance in blocks around a log to look for natural leaves.
+# Detection only: how far around a log to look for natural leaves when deciding
+# whether a trunk is a real tree. This does NOT limit how many leaves are cleared.
+# Leaf clearing follows the vanilla decay rule (every leaf the felled tree no longer
+# supports, within 6 blocks, is cleared) so the whole canopy goes, outer layers
+# included, while a neighbouring tree's leaves are always left alone.
 leaf-search-radius: 1
+# Safety ceiling on how many leaves a single fell may examine while working out the
+# canopy. Beyond this the plugin leaves cleanup to vanilla decay rather than risk a
+# neighbour's leaves. Only huge, densely packed canopies ever reach it.
+leaf-clear-budget: 8192
 # Connect logs diagonally during the search.
 # Required for acacia and cherry branches and for reliable 2x2 trunks.
 search-diagonal: true
@@ -32,12 +40,16 @@ default-break-leaves: false
 default-auto-pickup: false
 
 # Tool handling
-# Damage the axe once per extra log removed.
+# Damage the axe once per log felled (Unbreaking still applies). A worn axe only
+# fells as many logs as it can pay for and leaves the rest of the tree standing,
+# so felling can never outrun durability.
 apply-durability: true
 # Honor the Unbreaking enchantment when applying durability.
 respect-unbreaking: true
-# Allow the axe to break. When false the axe stops at 1 durability.
-break-tool: false
+# Let the axe break like vanilla once it runs out of durability mid-fell. Set this
+# to false to protect the axe instead: it then stops felling at 1 durability and
+# leaves the rest of the tree standing rather than breaking.
+break-tool: true
 
 # Extras
 # Replant a matching sapling at the base when the species supports it.

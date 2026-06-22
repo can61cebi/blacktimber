@@ -73,8 +73,21 @@ When a tree qualifies, BlackTimber flood fills the connected logs outward from t
 block using the vanilla `minecraft:logs` tag, so every wood species is covered, including
 future ones, with no code change. The search follows diagonals, so offset branches on
 acacia and cherry and the 2x2 trunks of dark oak, pale oak, giant spruce and jungle are
-all caught. A hard cap keeps it from ever running away. The remaining logs are then broken,
-dropped with the held tool, and the leaves are left to decay exactly like vanilla.
+all caught. A hard cap keeps it from ever running away. The logs are then broken and dropped
+with the held tool.
+
+Felling is bounded by the axe's durability. BlackTimber fells only as many logs as the axe
+can still pay for, honoring Unbreaking per log, so it can never outrun the tool. With
+`break-tool` on (the default) the axe wears down and breaks like vanilla once it runs out
+mid-fell, having toppled the part it could afford and leaving the rest standing; with it off
+the axe stops one point short and survives at 1 durability instead of breaking.
+
+Leaves are left to decay like vanilla unless a player turns leaf breaking on. When they do,
+BlackTimber clears the canopy by reproducing vanilla decay instantly: it flood fills the
+leaves the felled logs supported and removes exactly those a surviving log no longer keeps
+within range. The whole canopy goes, outer layers included, no matter how wide or tall the
+tree, while an adjacent tree whose trunk still stands keeps every one of its own leaves, even
+where two canopies overlap in a forest. Player placed (persistent) leaves are never touched.
 
 ## Player menu
 
@@ -162,7 +175,8 @@ changed live from the admin panel.
 | --- | --- | --- |
 | `require-natural-leaves` | `true` | Only fell clusters that carry natural leaves. This protects builds |
 | `min-natural-leaves` | `1` | Natural leaves needed to count as a tree |
-| `leaf-search-radius` | `1` | Blocks around a log to search for leaves |
+| `leaf-search-radius` | `1` | Detection only: range to confirm a trunk has natural leaves. Does not limit clearing |
+| `leaf-clear-budget` | `8192` | Safety ceiling on leaves examined per fell before deferring cleanup to vanilla decay |
 | `search-diagonal` | `true` | Connect logs diagonally for branches and 2x2 trunks |
 | `max-logs` | `150` | Hard cap on logs removed in one fell |
 | `require-axe` | `true` | Only trigger while holding an axe |
@@ -171,10 +185,9 @@ changed live from the admin panel.
 | `default-enabled` | `true` | Per player default: tree felling |
 | `default-break-leaves` | `false` | Per player default: break leaves |
 | `default-auto-pickup` | `false` | Per player default: drops to inventory |
-| `apply-durability` | `true` | Damage the axe per extra log |
+| `apply-durability` | `true` | Damage the axe per log felled; a worn axe only fells what it can pay for |
 | `respect-unbreaking` | `true` | Honor the Unbreaking enchantment |
-| `break-tool` | `false` | Allow the axe to break; false stops it at 1 durability |
-| `fell-leaves` | `false` | Also break leaves; false lets them decay naturally |
+| `break-tool` | `true` | Let the axe break like vanilla when it runs out; false stops it at 1 durability instead |
 | `replant-sapling` | `false` | Replant a matching sapling for single sapling species |
 | `protect-player-built` | `true` | Never fell a cluster that contains a player placed log |
 | `protect-structures` | `true` | Protect a tree when crafted blocks are attached to it |
@@ -235,6 +248,10 @@ These are the facts the plugin is built on, verified against the live game and s
 - **Leaf persistence.** Natural leaves are `persistent = false` and decay; placed leaves
   are `persistent = true` and do not. Bukkit exposes this through
   `org.bukkit.block.data.type.Leaves`. This flag is the core of build detection.
+- **Leaf decay range.** In Java Edition a natural leaf survives within 6 orthogonal blocks
+  of a log and decays at distance 7. BlackTimber's leaf clearing reproduces this rule
+  exactly, which is why it clears a felled tree's whole canopy but never a neighbour's,
+  even where two canopies overlap.
 - **Tree shapes.** Small trees are a single trunk. Dark oak and pale oak are always 2x2,
   and mega spruce and giant jungle can be 2x2 as well. Acacia, cherry and azalea trees grow
   at an angle with offset canopies. A connected, diagonal aware search handles all of these,
