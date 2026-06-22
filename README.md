@@ -89,13 +89,22 @@ within range. The whole canopy goes, outer layers included, no matter how wide o
 tree, while an adjacent tree whose trunk still stands keeps every one of its own leaves, even
 where two canopies overlap in a forest. Player placed (persistent) leaves are never touched.
 
+Replanting is an opt in per player switch, off by default. When it is on, the species is read
+from the felled trunk and a matching sapling is planted back where it stood: oak, birch,
+spruce, jungle, acacia and cherry plant a single sapling, dark oak and pale oak plant their
+full 2x2 only when all four cells are clear, and mangrove plants a propagule. It plants only
+on ground a sapling will actually hold, dirt, grass, podzol, moss and the like plus farmland,
+with clay and mud for mangrove, and never over water, lava or an occupied block, so an
+unusual spot is simply left empty rather than wasting a sapling.
+
 ## Player menu
 
-`/blacktimber` opens a small menu where each player flips three switches for themselves.
-Every choice is saved per player and survives a restart.
+`/blacktimber` opens a small menu where each player flips four switches for themselves: tree
+felling, breaking leaves, auto pickup and replanting saplings. Every choice is saved per
+player and survives a restart.
 
 <div align="center">
-  <img src="assets/png/menu-player.png" alt="The BlackTimber player menu with tree felling, break leaves and auto pickup" width="940">
+  <img src="assets/png/menu-player.png" alt="The BlackTimber player menu with tree felling, break leaves, auto pickup and replant" width="940">
 </div>
 
 ## Admin panel
@@ -135,6 +144,7 @@ The plugin has one command, `/blacktimber`, with the alias `/bt`.
 | `/blacktimber on`, `off`, `toggle` | Turn tree felling on or off for you | `blacktimber.use` |
 | `/blacktimber leaves <on/off>` | Toggle breaking leaves for you | `blacktimber.use` |
 | `/blacktimber pickup <on/off>` | Toggle auto pickup for you | `blacktimber.use` |
+| `/blacktimber replant <on/off>` | Toggle sapling replanting for you | `blacktimber.use` |
 | `/blacktimber admin` | Open the admin configuration and loot panels | `blacktimber.admin` |
 | `/blacktimber reload` | Reload `config.yml` from disk | `blacktimber.admin` |
 
@@ -185,10 +195,10 @@ changed live from the admin panel.
 | `default-enabled` | `true` | Per player default: tree felling |
 | `default-break-leaves` | `false` | Per player default: break leaves |
 | `default-auto-pickup` | `false` | Per player default: drops to inventory |
+| `default-replant` | `false` | Per player default: replant a matching sapling at the trunk |
 | `apply-durability` | `true` | Damage the axe per log felled; a worn axe only fells what it can pay for |
 | `respect-unbreaking` | `true` | Honor the Unbreaking enchantment |
 | `break-tool` | `true` | Let the axe break like vanilla when it runs out; false stops it at 1 durability instead |
-| `replant-sapling` | `false` | Replant a matching sapling for single sapling species |
 | `protect-player-built` | `true` | Never fell a cluster that contains a player placed log |
 | `protect-structures` | `true` | Protect a tree when crafted blocks are attached to it |
 | `structure-block-threshold` | `1` | Attached crafted blocks needed to treat a tree as a build |

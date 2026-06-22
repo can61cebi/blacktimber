@@ -10,7 +10,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Per player menu: three toggles plus a note about leaf loot rewards. */
+/** Per player menu: four toggles for felling, leaves, auto pickup and replant. */
 public final class UserMenu extends Menu {
 
     private final Player player;
@@ -24,11 +24,14 @@ public final class UserMenu extends Menu {
     private void redraw() {
         inventory.setItem(10, toggle(UserSettings.Option.TIMBER, Material.IRON_AXE, "Tree felling",
                 "Break one log to fell the whole tree."));
-        inventory.setItem(13, toggle(UserSettings.Option.LEAVES, Material.OAK_LEAVES, "Break leaves",
+        inventory.setItem(12, toggle(UserSettings.Option.LEAVES, Material.OAK_LEAVES, "Break leaves",
                 "Also clear the tree's leaves when it falls.",
                 "While on, leaves can drop biome themed bonus loot."));
-        inventory.setItem(16, toggle(UserSettings.Option.PICKUP, Material.HOPPER, "Auto pickup",
+        inventory.setItem(14, toggle(UserSettings.Option.PICKUP, Material.HOPPER, "Auto pickup",
                 "Send the drops straight to your inventory."));
+        inventory.setItem(16, toggle(UserSettings.Option.REPLANT, Material.OAK_SAPLING, "Replant saplings",
+                "Replant a matching sapling where the tree stood.",
+                "Skips spots that are blocked or off solid ground."));
     }
 
     private ItemStack toggle(UserSettings.Option option, Material icon, String label, String... description) {
@@ -47,8 +50,9 @@ public final class UserMenu extends Menu {
     protected void onTopClick(InventoryClickEvent event, int slot) {
         UserSettings.Option option = switch (slot) {
             case 10 -> UserSettings.Option.TIMBER;
-            case 13 -> UserSettings.Option.LEAVES;
-            case 16 -> UserSettings.Option.PICKUP;
+            case 12 -> UserSettings.Option.LEAVES;
+            case 14 -> UserSettings.Option.PICKUP;
+            case 16 -> UserSettings.Option.REPLANT;
             default -> null;
         };
         if (option == null) {

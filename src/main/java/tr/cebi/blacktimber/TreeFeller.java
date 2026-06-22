@@ -103,6 +103,7 @@ public final class TreeFeller {
 
         boolean autoPickup = plugin.userSettings().get(player, UserSettings.Option.PICKUP);
         boolean breakLeaves = plugin.userSettings().get(player, UserSettings.Option.LEAVES);
+        boolean replant = plugin.userSettings().get(player, UserSettings.Option.REPLANT);
 
         ItemStack dropTool = tool.clone();
         applyDamage(player, tool, plan);
@@ -125,14 +126,21 @@ public final class TreeFeller {
                 felled.size(),
                 autoPickup);
         List<ItemStack> sink = autoPickup ? new ArrayList<>() : null;
-        Block replantBase = base;
+
+        // The lowest layer of felled logs is the trunk footprint we may replant on:
+        // one cell for a normal tree, a 2x2 for dark or pale oak. Captured now, while
+        // the logs still exist, and used once the fell finishes.
+        Material species = origin.getType();
+        List<Block> footprint = replant ? trunkFootprint(felled, base.getY()) : List.of();
 
         if (work.size() <= cfg.staggerThreshold()) {
             while (!work.isEmpty()) {
                 breakAndCollect(work.poll(), dropTool, ctx, sink);
             }
             deliver(player, sink, false);
-            finish(replantBase, cfg);
+            if (replant) {
+                replantSaplings(footprint, species);
+            }
             return true;
         }
 
@@ -144,7 +152,9 @@ public final class TreeFeller {
             }
             if (work.isEmpty()) {
                 deliver(player, sink, true);
-                finish(replantBase, cfg);
+                if (replant) {
+                    replantSaplings(footprint, species);
+                }
                 task.cancel();
             }
         }, 1L, 1L);
@@ -478,42 +488,101 @@ public final class TreeFeller {
         player.getInventory().setItemInMainHand(tool);
     }
 
-    private void finish(Block base, BlackTimberConfig cfg) {
-        if (cfg.replantSapling()) {
-            tryReplant(base);
-        }
-    }
+    // What a felled trunk replants. Most species drop a single sapling; dark and
+    // pale oak need their full 2x2 of four; mangrove grows from a propagule.
+    private record Replant(Material sapling, boolean quad, boolean mangrove) { }
 
-    private void tryReplant(Block base) {
-        Material sapling = saplingFor(base.getType());
-        if (sapling == null) {
-            return;
-        }
-        if (!isSoil(base.getRelative(0, -1, 0).getType())) {
-            return;
-        }
-        if (base.getType().isAir()) {
-            base.setType(sapling, true);
-        }
-    }
-
-    // Single sapling species only. Dark oak and pale oak need a 2x2 of saplings
-    // and mangrove grows from a propagule, so those are skipped on purpose.
-    private static Material saplingFor(Material log) {
-        String species = switch (log) {
-            case OAK_LOG -> "OAK";
-            case BIRCH_LOG -> "BIRCH";
-            case SPRUCE_LOG -> "SPRUCE";
-            case JUNGLE_LOG -> "JUNGLE";
-            case ACACIA_LOG -> "ACACIA";
-            case CHERRY_LOG -> "CHERRY";
+    private static Replant replantFor(Material log) {
+        return switch (log) {
+            case OAK_LOG -> new Replant(Material.OAK_SAPLING, false, false);
+            case BIRCH_LOG -> new Replant(Material.BIRCH_SAPLING, false, false);
+            case SPRUCE_LOG -> new Replant(Material.SPRUCE_SAPLING, false, false);
+            case JUNGLE_LOG -> new Replant(Material.JUNGLE_SAPLING, false, false);
+            case ACACIA_LOG -> new Replant(Material.ACACIA_SAPLING, false, false);
+            case CHERRY_LOG -> new Replant(Material.CHERRY_SAPLING, false, false);
+            case DARK_OAK_LOG -> new Replant(Material.DARK_OAK_SAPLING, true, false);
+            case PALE_OAK_LOG -> new Replant(Material.PALE_OAK_SAPLING, true, false);
+            case MANGROVE_LOG -> new Replant(Material.MANGROVE_PROPAGULE, false, true);
+            // Stripped logs, wood blocks and nether stems never start a wild tree, so
+            // there is nothing meaningful to replant for them.
             default -> null;
         };
-        return species == null ? null : Material.matchMaterial(species + "_SAPLING");
     }
 
-    private static boolean isSoil(Material material) {
-        return Tag.DIRT.isTagged(material) || material == Material.FARMLAND;
+    // The felled logs sitting on the lowest layer, which is the trunk's footprint on
+    // the ground: a single cell for a normal tree, a 2x2 for dark or pale oak.
+    private static List<Block> trunkFootprint(List<Block> felled, int baseY) {
+        List<Block> footprint = new ArrayList<>(4);
+        for (Block log : felled) {
+            if (log.getY() == baseY) {
+                footprint.add(log);
+            }
+        }
+        return footprint;
+    }
+
+    private void replantSaplings(List<Block> footprint, Material species) {
+        Replant kind = replantFor(species);
+        if (kind == null || footprint.isEmpty()) {
+            return;
+        }
+        if (kind.quad()) {
+            replantQuad(footprint, kind.sapling());
+        } else {
+            for (Block cell : footprint) {
+                plantSingle(cell, kind.sapling(), kind.mangrove());
+            }
+        }
+    }
+
+    // A 2x2 species only replants when the whole footprint is a clean 2x2 and every
+    // cell is plantable. A lone dark or pale oak sapling never grows, so it is all
+    // four or none rather than littering a sapling that can never become a tree.
+    private void replantQuad(List<Block> footprint, Material sapling) {
+        if (footprint.size() != 4) {
+            return;
+        }
+        int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
+        int minZ = Integer.MAX_VALUE, maxZ = Integer.MIN_VALUE;
+        for (Block cell : footprint) {
+            minX = Math.min(minX, cell.getX());
+            maxX = Math.max(maxX, cell.getX());
+            minZ = Math.min(minZ, cell.getZ());
+            maxZ = Math.max(maxZ, cell.getZ());
+        }
+        if (maxX - minX != 1 || maxZ - minZ != 1) {
+            return;
+        }
+        for (Block cell : footprint) {
+            if (!plantable(cell, false)) {
+                return;
+            }
+        }
+        for (Block cell : footprint) {
+            cell.setType(sapling, true);
+        }
+    }
+
+    private void plantSingle(Block cell, Material sapling, boolean mangrove) {
+        if (plantable(cell, mangrove)) {
+            cell.setType(sapling, true);
+        }
+    }
+
+    // A cell can take a sapling only once the felled log has left air behind (so we
+    // never plant into water, lava or a block that flowed in) and the block beneath
+    // is ground a sapling will hold onto.
+    private boolean plantable(Block cell, boolean mangrove) {
+        return cell.getType().isAir() && canPlantOn(cell.getRelative(0, -1, 0).getType(), mangrove);
+    }
+
+    private static boolean canPlantOn(Material ground, boolean mangrove) {
+        if (Tag.DIRT.isTagged(ground) || ground == Material.FARMLAND) {
+            return true;
+        }
+        // Mangrove propagules also take clay and mud even where the dirt tag does not.
+        return mangrove && (ground == Material.CLAY || ground == Material.MUD
+                || ground == Material.MUDDY_MANGROVE_ROOTS);
     }
 
     private static long key(Block block) {

@@ -12,9 +12,9 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * The /blacktimber command. Players manage their three personal switches (tree
- * felling, leaf breaking, auto pickup); admins reload the config. The menu is
- * the nicer front end for the same switches.
+ * The /blacktimber command. Players manage their personal switches (tree felling,
+ * leaf breaking, auto pickup, replant); admins reload the config. The menu is the
+ * nicer front end for the same switches.
  */
 public final class BlackTimberCommand implements TabExecutor {
 
@@ -51,8 +51,9 @@ public final class BlackTimberCommand implements TabExecutor {
             case "timber" -> applyOption(sender, UserSettings.Option.TIMBER, parseState(args));
             case "leaves" -> applyOption(sender, UserSettings.Option.LEAVES, parseState(args));
             case "pickup" -> applyOption(sender, UserSettings.Option.PICKUP, parseState(args));
+            case "replant" -> applyOption(sender, UserSettings.Option.REPLANT, parseState(args));
             case "status" -> status(sender);
-            default -> send(sender, "Usage: /blacktimber <status|on|off|leaves|pickup|reload>", NamedTextColor.GRAY);
+            default -> send(sender, "Usage: /blacktimber <status|on|off|leaves|pickup|replant|reload>", NamedTextColor.GRAY);
         }
         return true;
     }
@@ -84,6 +85,9 @@ public final class BlackTimberCommand implements TabExecutor {
                 next ? NamedTextColor.GREEN : NamedTextColor.YELLOW);
         if (option == UserSettings.Option.LEAVES && next) {
             send(sender, "Breaking leaves can now drop bonus loot themed to the biome.", NamedTextColor.GRAY);
+        }
+        if (option == UserSettings.Option.REPLANT && next) {
+            send(sender, "A matching sapling will be replanted where each tree stood.", NamedTextColor.GRAY);
         }
     }
 
@@ -120,6 +124,7 @@ public final class BlackTimberCommand implements TabExecutor {
         line(player, "Tree felling", UserSettings.Option.TIMBER);
         line(player, "Break leaves", UserSettings.Option.LEAVES);
         line(player, "Auto pickup", UserSettings.Option.PICKUP);
+        line(player, "Replant saplings", UserSettings.Option.REPLANT);
     }
 
     private void line(Player player, String label, UserSettings.Option option) {
@@ -133,6 +138,7 @@ public final class BlackTimberCommand implements TabExecutor {
             case TIMBER -> "Tree felling";
             case LEAVES -> "Break leaves";
             case PICKUP -> "Auto pickup";
+            case REPLANT -> "Replant saplings";
         };
     }
 
@@ -149,7 +155,7 @@ public final class BlackTimberCommand implements TabExecutor {
         List<String> out = new ArrayList<>();
         if (args.length == 1) {
             String start = args[0].toLowerCase(Locale.ROOT);
-            List<String> subs = new ArrayList<>(List.of("menu", "status", "on", "off", "toggle", "timber", "leaves", "pickup"));
+            List<String> subs = new ArrayList<>(List.of("menu", "status", "on", "off", "toggle", "timber", "leaves", "pickup", "replant"));
             if (sender.hasPermission("blacktimber.admin")) {
                 subs.add("admin");
                 subs.add("reload");
@@ -161,7 +167,7 @@ public final class BlackTimberCommand implements TabExecutor {
             }
         } else if (args.length == 2) {
             String first = args[0].toLowerCase(Locale.ROOT);
-            if (first.equals("timber") || first.equals("leaves") || first.equals("pickup")) {
+            if (first.equals("timber") || first.equals("leaves") || first.equals("pickup") || first.equals("replant")) {
                 String start = args[1].toLowerCase(Locale.ROOT);
                 for (String option : List.of("on", "off", "toggle")) {
                     if (option.startsWith(start)) {

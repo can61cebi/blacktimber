@@ -17,7 +17,8 @@ public final class UserSettings {
     public enum Option {
         TIMBER("enabled"),
         LEAVES("break_leaves"),
-        PICKUP("auto_pickup");
+        PICKUP("auto_pickup"),
+        REPLANT("replant");
 
         private final String pdcKey;
 
@@ -57,6 +58,7 @@ public final class UserSettings {
             case TIMBER -> cfg.defaultEnabled();
             case LEAVES -> cfg.defaultBreakLeaves();
             case PICKUP -> cfg.defaultAutoPickup();
+            case REPLANT -> cfg.defaultReplant();
         };
     }
 }

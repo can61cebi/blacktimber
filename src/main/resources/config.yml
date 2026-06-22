@@ -38,6 +38,13 @@ default-enabled: true
 default-break-leaves: false
 # Whether drops from felling go straight to the player inventory.
 default-auto-pickup: false
+# Whether felling replants a matching sapling at the base. Off by default. The
+# species is read from the felled trunk: oak, birch, spruce, jungle, acacia and
+# cherry replant one sapling; dark oak and pale oak replant their full 2x2 only
+# when all four spots are clear; mangrove replants a propagule. It plants only on
+# valid ground (dirt, grass, podzol, moss and the like, plus farmland; mangrove
+# also clay and mud) and never over water, lava or an occupied block.
+default-replant: false
 
 # Tool handling
 # Damage the axe once per log felled (Unbreaking still applies). A worn axe only
@@ -50,10 +57,6 @@ respect-unbreaking: true
 # to false to protect the axe instead: it then stops felling at 1 durability and
 # leaves the rest of the tree standing rather than breaking.
 break-tool: true
-
-# Extras
-# Replant a matching sapling at the base when the species supports it.
-replant-sapling: false
 
 # Leaf loot
 # When a player has leaf breaking on, broken leaves can drop bonus loot themed to
